@@ -20,52 +20,61 @@ jobs:
       run: mvn compile
       
   security-scan:
-        runs-on: self-hosted
-      
-        steps:
-          - name: Checkout Code
-            uses: actions/checkout@v4
-      
-          - name: Set up JDK 17
-            uses: actions/setup-java@v4
-            with:
-              distribution: temurin
-              java-version: '17'
-              cache: maven
-      
-          - name: Resolve Maven Dependencies
-            run: |
-              mvn dependency:resolve
-      
-          - name: Trivy Filesystem Scan
-            uses: aquasecurity/trivy-action@master
-            with:
-              scan-type: fs
-              scan-ref: .
-              format: json
-              output: fs-report.json
-              scanners: vuln
-              severity: CRITICAL,HIGH
-              ignore-unfixed: true
-              skip-version-check: true
-      
-          - name: Upload Trivy Report
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-              name: trivy-fs-report
-              path: fs-report.json
-      test:
-            runs-on: self-hosted
-            needs: security-check
-            steps:
-            - uses: actions/checkout@v4
-            - name: Set up JDK 17
-              uses: actions/setup-java@v4
-              with:
-                java-version: '17'
-                distribution: 'temurin'
-                cache: maven
-            - name: Unit Test Cases
-              run: mvn test
-           
+      runs-on: self-hosted
+    
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+    
+        - name: Set up JDK 17
+          uses: actions/setup-java@v4
+          with:
+            distribution: temurin
+            java-version: '17'
+            cache: maven
+    
+        - name: Resolve Maven Dependencies
+          run: |
+            mvn dependency:resolve
+    
+        - name: Trivy Filesystem Scan
+          uses: aquasecurity/trivy-action@master
+          with:
+            scan-type: fs
+            scan-ref: .
+            format: json
+            output: fs-report.json
+            scanners: vuln
+            severity: CRITICAL,HIGH
+            ignore-unfixed: true
+            skip-version-check: true
+    
+        - name: Upload Trivy Report
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: trivy-fs-report
+            path: fs-report.json
+
+  test:
+      runs-on: self-hosted
+      needs: compile
+    
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+    
+        - name: Set up JDK 17
+          uses: actions/setup-java@v4
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+            cache: maven
+    
+        - name: Check Java and Maven
+          run: |
+            java -version
+            mvn -version
+    
+        - name: Unit Test Cases
+          run: mvn test
